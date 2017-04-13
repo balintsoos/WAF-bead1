@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.Title = "My Articles";
+}
+
+<h2>@ViewBag.Title</h2>
+<hr />
+
+@Html.ActionLink("Create new article", "Create", new { area = "" }, new { @class = "btn btn-primary btn-lg" })
+
+@foreach (var article in Model)
+{
+    <hr />
+    <div class="row">
+        <h2>@article.Title</h2>
+        
+        @if (article.isLead)
+        {
+            <strong>Lead story</strong>
+        }
+        
+        <p>@article.Summary</p>
+        <p>
+            @Html.ActionLink("Read more", "Read", new { id = article.Id }, new { @class = "btn btn-default" })
+            @Html.ActionLink("Edit", "Edit", new { id = article.Id }) | 
+            @Html.ActionLink("Delete", "Delete", new { id = article.Id })
+        </p>
+    </div>
+}
+

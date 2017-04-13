@@ -1,0 +1,27 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+@foreach (var article in Model)
+{
+    if (article.isLead)
+    {
+        <div class="jumbotron">
+            <h1>@article.Title</h1>
+            <p class="lead">@article.Summary</p>
+            <p>@Html.ActionLink("Read more", "Read", new { id = article.Id }, new { @class = "btn btn-primary btn-lg" })</p>
+        </div>
+    }
+}
+
+@foreach (var article in Model)
+{
+    if (!article.isLead)
+    {
+        <div class="row">
+            <h2>@article.Title</h2>
+            <p>@article.Summary</p>
+            <p>@Html.ActionLink("Read more", "Read", new { id = article.Id }, new { @class = "btn btn-default" })</p>
+        </div>
+    }
+}

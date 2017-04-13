@@ -1,0 +1,15 @@
+﻿@{
+    ViewBag.Title = "Archive";
+}
+
+<h2>@ViewBag.Title</h2>
+
+@foreach (var article in Model)
+{
+    <hr />
+    <div class="row">
+        <h2>@article.Title</h2>
+        <p>@article.Summary</p>
+        <p>@Html.ActionLink("Read more", "Read", new { id = article.Id }, new { @class = "btn btn-default" })</p>
+    </div>
+}
