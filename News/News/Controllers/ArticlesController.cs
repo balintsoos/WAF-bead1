@@ -6,6 +6,10 @@ using System.Web.Mvc;
 using News.Models;
 using System.Net;
 using System.Data.Entity;
+using PagedList;
+using System.Globalization;
+using System.IO;
+using System.Web.Helpers;
 
 namespace News.Controllers
 {
@@ -16,13 +20,62 @@ namespace News.Controllers
         // GET: Articles
         public ActionResult Index()
         {
-            return View(db.Articles.OrderBy(a => a.PublishedAt).ToList());
+            var articlesInOrder = db.Articles.OrderByDescending(a => a.PublishedAt);
+            
+            ViewBag.Lead = articlesInOrder.Where(a => a.isLead).FirstOrDefault();
+
+            if (ViewBag.Lead != null)
+            {
+                ViewBag.LeadImage = GetMainArticleImageId(ViewBag.Lead.Id);
+            }
+
+            var articles = articlesInOrder.Where(a => a.isLead == false).Take(10).ToList();
+
+            return View(articles);
+        }
+
+        public FileResult Image(Int32? imageId, Boolean isLarge = false)
+        {
+            Byte[] image = GetArticleImage(imageId, isLarge);
+
+            if (image == null) // nem sikerült betölteni a képet
+                return File("~/Content/missing-image.png", "image/png");
+
+            return File(image, "image/png");
         }
 
         // GET: Articles/Archive
-        public ActionResult Archive()
+        public ActionResult Archive(string searchString, int? page)
         {
-            return View(db.Articles.OrderBy(a => a.PublishedAt).ToList());
+            var articlesInOrder = db.Articles.OrderByDescending(a => a.PublishedAt);
+            int pageNumber = (page ?? 1);
+            int pageSize = 20;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                page = 1;
+                DateTime searchDate;
+
+                if (DateTime.TryParseExact(searchString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out searchDate) == true)
+                {
+                    var articles = articlesInOrder.Where(a => a.Title.Contains(searchString)
+                        || a.Summary.Contains(searchString)
+                        || a.Content.Contains(searchString)
+                        || DbFunctions.TruncateTime(a.PublishedAt) == searchDate.Date);
+
+                    return View(articles.ToPagedList(pageNumber, pageSize));
+                }
+                else
+                {
+                    var articles = articlesInOrder.Where(a => a.Title.Contains(searchString)
+                        || a.Summary.Contains(searchString)
+                        || a.Content.Contains(searchString));
+
+                    return View(articles.ToPagedList(pageNumber, pageSize));
+                }
+            }
+
+            return View(articlesInOrder.ToPagedList(pageNumber, pageSize));
         }
 
         public ActionResult MyArticles()
@@ -34,7 +87,7 @@ namespace News.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            return View(db.Articles.Where(a => a.Author == username).OrderBy(a => a.PublishedAt).ToList());
+            return View(db.Articles.Where(a => a.Author == username).OrderByDescending(a => a.PublishedAt).ToList());
         }
 
         // GET: Articles/Create
@@ -78,6 +131,8 @@ namespace News.Controllers
                 return HttpNotFound();
             }
 
+            ViewBag.Image = GetMainArticleImageId(item.Id);
+
             return View(item);
         }
 
@@ -111,6 +166,20 @@ namespace News.Controllers
             if (ModelState.IsValid)
             {
                 db.Entry(item).State = EntityState.Modified;
+
+                WebImage img = WebImage.GetImageFromRequest();
+
+                if (img != null)
+                {
+                    Image image = new Image();
+                    image.Article = item;
+                    byte[] imageAsBytes = img.GetBytes();
+                    image.ImageLarge = imageAsBytes;
+                    image.ImageSmall = imageAsBytes;
+
+                    db.Images.Add(image);
+                }
+
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -154,6 +223,34 @@ namespace News.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private IEnumerable<Int32> GetArticleImageIds(Int32 articleId)
+        {
+            return db.Images.Where(image => image.ArticleId == articleId).Select(image => image.Id);
+        }
+
+        private Int32? GetMainArticleImageId(Int32 articleId)
+        {
+            Image img = db.Images.Where(image => image.ArticleId == articleId).FirstOrDefault();
+
+            if (img == null)
+                return null;
+
+            return img.Id;
+        }
+
+        private Byte[] GetArticleImage(Int32? imageId, Boolean large)
+        {
+            Image image = db.Images.FirstOrDefault(img => img.Id == imageId);
+
+            if (image == null)
+                return null;
+
+            if (large)
+                return image.ImageLarge;
+            else
+                return image.ImageSmall;
         }
     }
 }

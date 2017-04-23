@@ -2,6 +2,10 @@
     ViewBag.Title = Model.Title;
 }
 
+@if (ViewBag.Image != null)
+{
+    <img src="@Url.Action("Image", new { imageId = ViewBag.Image })" class="contentImage" />
+}
 <h2>@Model.Title</h2>
 <i>@Model.Author</i><br />
 (@Model.PublishedAt)

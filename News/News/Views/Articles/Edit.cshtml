@@ -7,7 +7,7 @@
 <h2>@ViewBag.Title</h2>
 <hr />
 
-@using (Html.BeginForm())
+@using (Html.BeginForm("Edit", "Articles", FormMethod.Post, new { enctype = "multipart/form-data" }))
 {
     @Html.AntiForgeryToken()
 
@@ -40,6 +40,12 @@
             <div class="col-md-10">
                 @Html.EditorFor(model => model.isLead, new { htmlAttributes = new { @class = "form-control" } })
                 @Html.ValidationMessageFor(model => model.isLead, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">Upload an image</label>
+            <div class="col-md-10">
+                <input type="file" name="image" />
             </div>
         </div>
 
