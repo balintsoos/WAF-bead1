@@ -298,6 +298,7 @@
     <Content Include="Views\Articles\Read.cshtml" />
     <Content Include="Views\Articles\Archive.cshtml" />
     <Content Include="Views\Articles\MyArticles.cshtml" />
+    <Content Include="Views\Articles\Images.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

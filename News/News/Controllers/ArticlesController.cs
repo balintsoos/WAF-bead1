@@ -109,6 +109,24 @@ namespace News.Controllers
             if (ModelState.IsValid)
             {
                 db.Articles.Add(item);
+
+                WebImage img = WebImage.GetImageFromRequest();
+
+                if (img != null)
+                {
+                    Image image = new Image();
+                    image.Article = item;
+                    image.ImageLarge = img.GetBytes();
+                    image.ImageSmall = img.Resize(img.Width / 2, img.Height / 2).GetBytes();
+
+                    db.Images.Add(image);
+                }
+
+                if (item.isLead)
+                {
+                    ChangeLeadArticle(item.Id);
+                }
+
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -134,6 +152,27 @@ namespace News.Controllers
             ViewBag.Image = GetMainArticleImageId(item.Id);
 
             return View(item);
+        }
+
+        // GET: Articles/Images/{articleId}
+        public ActionResult Images(Int32? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            Article item = db.Articles.Find(id);
+
+            if (item == null)
+            {
+                return HttpNotFound();
+            }
+
+            ViewBag.Images = GetArticleImageIds(item.Id);
+            ViewBag.ArticleId = item.Id;
+
+            return View();
         }
 
         // GET: Articles/Edit/{id}
@@ -173,11 +212,15 @@ namespace News.Controllers
                 {
                     Image image = new Image();
                     image.Article = item;
-                    byte[] imageAsBytes = img.GetBytes();
-                    image.ImageLarge = imageAsBytes;
-                    image.ImageSmall = imageAsBytes;
+                    image.ImageLarge = img.GetBytes();
+                    image.ImageSmall = img.Resize(img.Width / 2, img.Height / 2).GetBytes();
 
                     db.Images.Add(image);
+                }
+
+                if (item.isLead)
+                {
+                    ChangeLeadArticle(item.Id);
                 }
 
                 db.SaveChanges();
@@ -225,9 +268,9 @@ namespace News.Controllers
             base.Dispose(disposing);
         }
 
-        private IEnumerable<Int32> GetArticleImageIds(Int32 articleId)
+        private Int32[] GetArticleImageIds(Int32 articleId)
         {
-            return db.Images.Where(image => image.ArticleId == articleId).Select(image => image.Id);
+            return db.Images.Where(image => image.ArticleId == articleId).Select(image => image.Id).ToArray();
         }
 
         private Int32? GetMainArticleImageId(Int32 articleId)
@@ -251,6 +294,20 @@ namespace News.Controllers
                 return image.ImageLarge;
             else
                 return image.ImageSmall;
+        }
+
+        private void ChangeLeadArticle(Int32 ArticleId)
+        {
+            var articles = db.Articles.Where(article => article.isLead && article.Id != ArticleId);
+
+            foreach (var article in articles)
+            {
+                db.Entry(article).State = EntityState.Modified;
+
+                article.isLead = false;
+            }
+
+            db.SaveChanges();
         }
     }
 }

@@ -2,10 +2,16 @@
     ViewBag.Title = "Home Page";
 }
 
+<style>
+    .contentImage {
+        max-width: 100%;
+    }
+</style>
+
 @if (ViewBag.Lead != null)
 {
     <div class="jumbotron">
-        <a href="@Url.Action("Read", new { id = ViewBag.Lead.Id })" target="_blank">
+        <a href="@Url.Action("Read", new { id = ViewBag.Lead.Id })">
             @if (ViewBag.LeadImage != null)
             {
                 <img src="@Url.Action("Image", new { imageId = ViewBag.LeadImage })" class="contentImage" />
