@@ -14,12 +14,6 @@ namespace News
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
-                name: "About",
-                url: "about",
-                defaults: new { controller = "Main", action = "About" }
-            );
-
-            routes.MapRoute(
                name: "Contact",
                url: "contact",
                defaults: new { controller = "Main", action = "Contact" }

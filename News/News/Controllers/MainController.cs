@@ -8,13 +8,6 @@ namespace News.Controllers
 {
     public class MainController : Controller
     {
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
-
-            return View();
-        }
-
         public ActionResult Contact()
         {
             ViewBag.Message = "Creator of this application:";
